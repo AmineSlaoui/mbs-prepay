@@ -1,0 +1,11 @@
+# Secrets
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+
+# Data (files are too large for GitHub)
+/data 
