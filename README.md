@@ -45,7 +45,7 @@ Requires [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
    ```bash
    RANDOM_SEED=
 
-   FANNIE_MAE_API_KEY=
+   FANNIE_MAE_API_KEY= Don't know if we are using it yet
    ```
 
 5. **(VS Code) Select the interpreter**

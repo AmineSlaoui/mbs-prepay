@@ -9,3 +9,6 @@ __pycache__/
 
 # Data (files are too large for GitHub)
 /data 
+
+# MacOS file settings
+.DS_Store
