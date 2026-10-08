@@ -8,7 +8,7 @@
 __pycache__/
 
 # Data (files are too large for GitHub)
-/data 
+/data/Performance_All.zip
 
 # MacOS file settings
 .DS_Store
