@@ -1,6 +1,7 @@
 # Core data / numerics
 numpy>=1.26
 pandas>=2.2
+polars>=2.0            # loan-level sample (Expr.bin_intervals)
 scipy>=1.12
 pyarrow>=15.0          
 
