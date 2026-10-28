@@ -7,8 +7,8 @@
 # Python
 __pycache__/
 
-# Data (files are too large for GitHub)
-/data/fannie/Performance_All.zip
+# Data (each user downloads it locally, see README)
+/data/
 
 
 # MacOS file settings
