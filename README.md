@@ -19,12 +19,14 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 ├── notebooks/
 │   └── 01_1d_2d_analysis.ipynb   # Prepayment speed vs. borrower and loan characteristics (1D and 2D)
 ├── references/
-│   └── crt-file-layout-and-glossary.pdf   # Fannie Mae loan performance file layout
+│   ├── fannie_crt-file-layout-and-glossary.pdf    # Fannie Mae file layout (113 fields)
+│   └── freddie_general_user_guide_july_2026.pdf   # Freddie Mac user guide (31 origination + 35 performance fields)
 ├── reports/
 │   ├── data_overview.md          # Inventory of what is in data/
 │   └── glossary.md               # Definitions of fields and terms used in the notebooks
 ├── source/
-│   └── load_data.py              # Sampler for data/fannie/Performance_All.zip
+│   ├── fannie_load_data.py       # Sampler for data/fannie/Performance_All.zip
+│   └── freddie_load_data.py      # Sampler for data/freddie/raw/historical_data_YYYY.zip
 ├── .env                          # Local configuration (seed, API keys)
 ├── requirements.txt              # Python dependencies
 └── README.md
@@ -34,6 +36,24 @@ The `data/` folder is not in git. Download the files yourself and put them at th
 
 - **Fannie Mae:** `Performance_All.zip` comes from the [Single-Family Loan Performance Data](https://capitalmarkets.fanniemae.com/credit-risk-transfer/single-family-credit-risk-transfer/fannie-mae-single-family-loan-performance-data)
 - **Freddie Mac:** the `historical_data_YYYY.zip` files come from the [Single-Family Loan-Level Dataset](https://www.freddiemac.com/research/datasets/sf-loanlevel-dataset)
+
+## Loan-level data
+
+Both datasets describe each loan in two ways:
+
+| | Origination data | Performance data |
+|---|---|---|
+| **Granularity** | One row per loan | One row per loan per month |
+| **Describes** | The loan and borrower when the loan was made. These values never change. | What happens to the loan each month until it ends |
+| **Example fields** | FICO, LTV, DTI, original rate and balance, term, purpose, occupancy, state, channel | Current balance, current rate, loan age, delinquency status, modifications, zero balance code (payoff/default) and date |
+| **Used for** | Model features (who the borrower is) | Targets and time-varying features (did the loan prepay this month?) |
+
+The two are joined on the loan ID.
+
+- **Fannie Mae** stores both in a single file: each monthly row in `Performance_All.zip` repeats the loan's origination fields (113 fields per row).
+- **Freddie Mac** stores them separately. Each origination quarter has an `orig_YYYYQn.txt` (31 fields) and a `perf_YYYYQn.txt` (35 fields), nested as `historical_data_YYYY.zip` → `historical_data_YYYYQn.zip`. `freddie_load_data.read_performance_sample` joins the two for you.
+
+Neither dataset has column names. The loaders name columns using the PDFs in `references/`.
 
 ## Setup
 

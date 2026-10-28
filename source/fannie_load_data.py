@@ -3,7 +3,7 @@
 
 The zip holds one pipe-delimited, header-less CSV per acquisition quarter
 (2000Q1 ... 2026Q1, ~950 GB uncompressed). Layout follows
-`references/crt-file-layout-and-glossary.pdf` ("Single-Family Loan Performance
+`references/fannie_crt-file-layout-and-glossary.pdf` ("Single-Family Loan Performance
 Dataset and CRT - Glossary and File Layout"): rows have 113 fields, i.e. field
 positions 1-113 of the PDF. Field 114 (Origination VantageScore 4.0) is only
 populated from the May 2026 activity period and is not in this extract.
