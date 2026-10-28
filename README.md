@@ -13,11 +13,16 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   │   ├── pool/                 # PoolTalk monthly pool factor files, 2019-06 to 2026-10, one folder per year
 │   │   ├── mbs/                  # Data Dynamics BCPR prepayment speeds by seller/servicer
 │   │   └── processed/            # Cached samples, e.g. perf_sample_80mb.parquet 
-│   └── freddie/
-│       ├── raw/                  # Single-Family Loan-Level Dataset, full_set_standard_historical_data.zip, 1999-2026
-│       └── processed/            # Cached samples 
+│   ├── freddie/
+│   │   ├── raw/                  # Single-Family Loan-Level Dataset, full_set_standard_historical_data.zip, 1999-2026
+│   │   └── processed/            # Cached samples 
+│   └── combined/
+│       └── model_table.parquet   # Fannie + Freddie loan-month table for the models (built by notebook 03)
 ├── notebooks/
-│   └── 01_1d_2d_analysis.ipynb   # Prepayment speed vs. borrower and loan characteristics (1D and 2D)
+│   ├── 01_1d_2d_analysis.ipynb   # Prepayment speed vs. borrower and loan characteristics (1D and 2D)
+│   ├── 02_fannie_vs_freddie.ipynb # Do Fannie and Freddie loans prepay the same way?
+│   ├── 03_model_table.ipynb      # Builds data/combined/model_table.parquet (features, target, time split)
+│   └── 04_lightgbm.ipynb         # LightGBM v1: payoff probability -> predicted vs. actual CPR (model saved to data/models/)
 ├── references/
 │   ├── fannie_crt-file-layout-and-glossary.pdf    # Fannie Mae file layout (113 fields)
 │   └── freddie_general_user_guide_july_2026.pdf   # Freddie Mac user guide (31 origination + 35 performance fields)
