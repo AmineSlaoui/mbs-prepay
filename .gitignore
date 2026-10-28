@@ -8,8 +8,8 @@
 __pycache__/
 
 # Data (files are too large for GitHub)
-/data/Performance_All.zip
-/data/processed/
+/data/fannie/Performance_All.zip
+
 
 # MacOS file settings
 .DS_Store

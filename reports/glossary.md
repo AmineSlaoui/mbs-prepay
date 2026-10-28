@@ -98,4 +98,4 @@ _Definitions of the terms used in `notebooks/02_prepayment_characteristics.ipynb
 
 - **Zero Balance Code (field 44):** why a loan left the data. **01** = paid off (prepaid or matured). This is the event we count. 02/03/09/15 = third-party sale, short sale, deed-in-lieu or note sale (involuntary). 06 = repurchased by the lender. 16 = reperforming loan sale.
 - **UPB at the Time of Removal (field 46):** the balance when the loan left. We use it as the prepaid amount.
-- **Reference layout:** `references/crt-file-layout-and-glossary.pdf`. It is verified against `data/Performance_All.zip` (113 fields per row = PDF fields 1 to 113).
+- **Reference layout:** `references/crt-file-layout-and-glossary.pdf`. It is verified against `data/fannie/Performance_All.zip` (113 fields per row = PDF fields 1 to 113).

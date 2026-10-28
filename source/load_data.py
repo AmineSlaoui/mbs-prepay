@@ -1,4 +1,4 @@
-# Reads data directly from data/Performance_All.zip (too large to unzip)
+# Reads data directly from data/fannie/Performance_All.zip (too large to unzip)
 """Loan-level sampler for Fannie Mae `Performance_All.zip`.
 
 The zip holds one pipe-delimited, header-less CSV per acquisition quarter
@@ -22,7 +22,7 @@ import polars as pl
 from tqdm.auto import tqdm
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-PERFORMANCE_ZIP = PROJECT_ROOT / "data" / "Performance_All.zip"
+PERFORMANCE_ZIP = PROJECT_ROOT / "data" / "fannie" / "Performance_All.zip"
 
 N_FIELDS = 113
 
