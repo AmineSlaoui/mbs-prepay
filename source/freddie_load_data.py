@@ -1,9 +1,10 @@
-# Reads data directly from data/freddie/raw/historical_data_YYYY.zip (no unzipping needed)
+# Reads data directly from data/freddie/raw/full_set_standard_historical_data.zip (no unzipping needed)
 """Loan-level sampler for the Freddie Mac Single-Family Loan-Level Dataset.
 
-Each `historical_data_YYYY.zip` holds one stored (uncompressed) zip per
-origination quarter, `historical_data_YYYYQn.zip`, which in turn holds two
-pipe-delimited, header-less files:
+`full_set_standard_historical_data.zip` holds one stored (uncompressed) zip per
+origination year, `historical_data_YYYY.zip`, each holding one stored zip per
+quarter, `historical_data_YYYYQn.zip`, which in turn holds two pipe-delimited,
+header-less files:
 
 - `orig_YYYYQn.txt`: one row per loan, characteristics at origination (31 fields)
 - `perf_YYYYQn.txt`: one row per loan per month, monthly performance (35 fields)
@@ -27,7 +28,7 @@ import polars as pl
 from tqdm.auto import tqdm
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = PROJECT_ROOT / "data" / "freddie" / "raw"
+RAW_ZIP = PROJECT_ROOT / "data" / "freddie" / "raw" / "full_set_standard_historical_data.zip"
 
 ORIG_FIELDS = [
     "fico",  # Classic FICO at origination
@@ -136,27 +137,22 @@ CAT_COLS = ["first_time_buyer", "occupancy", "channel", "prepay_penalty", "amort
             "dlq_disaster", "assistance_plan", "mi_cancelled"]
 
 
-def list_quarters(raw_dir=RAW_DIR):
-    """Origination quarters available in `raw_dir`, e.g. ["1999Q1", ...].
-
-    Yearly zips that are empty or not valid zips (failed downloads) are skipped
-    with a warning.
-    """
+def list_quarters(zip_path=RAW_ZIP):
+    """Origination quarters in the full-set zip, e.g. ["1999Q1", ...]."""
     quarters = []
-    for path in sorted(Path(raw_dir).glob("historical_data_*.zip")):
-        if not zipfile.is_zipfile(path):
-            print(f"skipping {path.name}: not a valid zip (re-download it)")
-            continue
-        with zipfile.ZipFile(path) as zf:
-            quarters += sorted(n[len("historical_data_"):-4] for n in zf.namelist()
-                               if n.endswith(".zip"))
+    with zipfile.ZipFile(zip_path) as full:
+        for year_zip in sorted(n for n in full.namelist() if n.endswith(".zip")):
+            with zipfile.ZipFile(full.open(year_zip)) as zf:
+                quarters += sorted(n[len("historical_data_"):-4] for n in zf.namelist()
+                                   if n.endswith(".zip"))
     return quarters
 
 
-def _open_quarter(quarter, raw_dir=RAW_DIR):
-    """Inner zip for one quarter. Inner zips are stored, so this is a cheap seek."""
-    outer = zipfile.ZipFile(Path(raw_dir) / f"historical_data_{quarter[:4]}.zip")
-    return zipfile.ZipFile(outer.open(f"historical_data_{quarter}.zip"))
+def _open_quarter(quarter, zip_path=RAW_ZIP):
+    """Innermost zip for one quarter. Outer levels are stored, so this is a cheap seek."""
+    full = zipfile.ZipFile(zip_path)
+    year = zipfile.ZipFile(full.open(f"historical_data_{quarter[:4]}.zip"))
+    return zipfile.ZipFile(year.open(f"historical_data_{quarter}.zip"))
 
 
 def _parse(raw, names, member):
@@ -184,9 +180,9 @@ def _cast(df):
     )
 
 
-def read_origination(quarter, raw_dir=RAW_DIR):
+def read_origination(quarter, zip_path=RAW_ZIP):
     """All origination rows for one quarter, one row per loan."""
-    with _open_quarter(quarter, raw_dir) as zf, zf.open(f"orig_{quarter}.txt") as fh:
+    with _open_quarter(quarter, zip_path) as zf, zf.open(f"orig_{quarter}.txt") as fh:
         return _cast(_parse(fh.read(), ORIG_FIELDS, f"orig_{quarter}.txt"))
 
 
@@ -203,17 +199,17 @@ def _read_perf_head(zf, quarter, n_bytes):
     return df
 
 
-def read_performance_sample(mb_per_file=80, quarters=None, raw_dir=RAW_DIR):
+def read_performance_sample(mb_per_file=80, quarters=None, zip_path=RAW_ZIP):
     """Sample complete loan histories from the head of every quarterly performance file.
 
     Returns one row per loan-month with the columns in `PERF_FIELDS`, the
     origination columns in `ORIG_FIELDS` joined on `loan_id`, and
     `orig_quarter` (source file).
     """
-    quarters = quarters or list_quarters(raw_dir)
+    quarters = quarters or list_quarters(zip_path)
     frames = []
     for q in tqdm(quarters, desc="quarters"):
-        with _open_quarter(q, raw_dir) as zf:
+        with _open_quarter(q, zip_path) as zf:
             perf = _read_perf_head(zf, q, int(mb_per_file * 1e6))
             with zf.open(f"orig_{q}.txt") as fh:
                 orig = _parse(fh.read(), ORIG_FIELDS, f"orig_{q}.txt")

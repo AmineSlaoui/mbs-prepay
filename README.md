@@ -14,7 +14,7 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   │   ├── mbs/                  # Data Dynamics BCPR prepayment speeds by seller/servicer
 │   │   └── processed/            # Cached samples, e.g. perf_sample_80mb.parquet 
 │   └── freddie/
-│       ├── raw/                  # Single-Family Loan-Level Dataset, historical_data_YYYY.zip, 1999-2026
+│       ├── raw/                  # Single-Family Loan-Level Dataset, full_set_standard_historical_data.zip, 1999-2026
 │       └── processed/            # Cached samples 
 ├── notebooks/
 │   └── 01_1d_2d_analysis.ipynb   # Prepayment speed vs. borrower and loan characteristics (1D and 2D)
@@ -26,7 +26,7 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   └── glossary.md               # Definitions of fields and terms used in the notebooks
 ├── source/
 │   ├── fannie_load_data.py       # Sampler for data/fannie/Performance_All.zip
-│   └── freddie_load_data.py      # Sampler for data/freddie/raw/historical_data_YYYY.zip
+│   └── freddie_load_data.py      # Sampler for data/freddie/raw/full_set_standard_historical_data.zip
 ├── .env                          # Local configuration (seed, API keys)
 ├── requirements.txt              # Python dependencies
 └── README.md
@@ -35,7 +35,7 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 The `data/` folder is not in git. Download the files yourself and put them at the paths shown:
 
 - **Fannie Mae:** `Performance_All.zip` comes from the [Single-Family Loan Performance Data](https://capitalmarkets.fanniemae.com/credit-risk-transfer/single-family-credit-risk-transfer/fannie-mae-single-family-loan-performance-data)
-- **Freddie Mac:** the `historical_data_YYYY.zip` files come from the [Single-Family Loan-Level Dataset](https://www.freddiemac.com/research/datasets/sf-loanlevel-dataset)
+- **Freddie Mac:** `full_set_standard_historical_data.zip` (the full Standard Dataset) comes from the [Single-Family Loan-Level Dataset](https://www.freddiemac.com/research/datasets/sf-loanlevel-dataset)
 
 ## Loan-level data
 
@@ -51,7 +51,7 @@ Both datasets describe each loan in two ways:
 The two are joined on the loan ID.
 
 - **Fannie Mae** stores both in a single file: each monthly row in `Performance_All.zip` repeats the loan's origination fields (113 fields per row).
-- **Freddie Mac** stores them separately. Each origination quarter has an `orig_YYYYQn.txt` (31 fields) and a `perf_YYYYQn.txt` (35 fields), nested as `historical_data_YYYY.zip` → `historical_data_YYYYQn.zip`. `freddie_load_data.read_performance_sample` joins the two for you.
+- **Freddie Mac** stores them separately. Each origination quarter has an `orig_YYYYQn.txt` (31 fields) and a `perf_YYYYQn.txt` (35 fields), nested as `full_set_standard_historical_data.zip` → `historical_data_YYYY.zip` → `historical_data_YYYYQn.zip`. `freddie_load_data.read_performance_sample` joins the two for you.
 
 Neither dataset has column names. The loaders name columns using the PDFs in `references/`.
 
