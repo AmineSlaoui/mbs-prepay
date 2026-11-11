@@ -1,4 +1,4 @@
-"""Standard model check: predicted vs. actual CPR by refi incentive and loan age, plus a SHAP summary.
+"""Model checks: predicted vs. actual CPR by refi incentive and loan age, SHAP summary, and permutation importance.
 
 Run it after every model change, with the old and new model side by side, to see what the change improved.
 """
@@ -25,14 +25,15 @@ def cpr_by(frame, by, preds, min_rows=2_000):
                  .sort(by))
 
 
-def plot_over_time(frame, preds):
-    """Monthly actual vs. predicted CPR. `frame` needs t (months since year 0), prepay and exposure."""
+def plot_over_time(frame, preds, held_out=((2019, 2022, "valid"), (2022, 2027, "test"))):
+    """Monthly actual vs. predicted CPR. `frame` needs t (months since year 0), prepay and exposure.
+    `held_out`: (start year, end year, label) spans to shade, i.e. years the model did not train on."""
     d = cpr_by(frame, "t", preds, min_rows=500).with_columns(date=pl.date(pl.col("t") // 12, pl.col("t") % 12 + 1, 1))
     fig, ax = plt.subplots(figsize=(13, 4))
     ax.plot(d["date"], d["actual"], color="#0b0b0b", lw=1.4, label="Actual")
     for name, color in zip(preds, COLORS):
         ax.plot(d["date"], d[name], color=color, lw=1.4, label=name)
-    for start, end, label in [(2019, 2022, "valid"), (2022, 2027, "test")]:
+    for start, end, label in held_out:
         ax.axvspan(np.datetime64(f"{start}-01-01"), np.datetime64(f"{end}-01-01"), color="#e6e5e0", alpha=0.5, lw=0)
         ax.text(np.datetime64(f"{start}-03-01"), ax.get_ylim()[1] * 0.92, label, color="#52514e")
     ax.set(title="Monthly CPR: actual vs. predicted (shaded: years the model did not train on)", ylabel="CPR (%)")
@@ -64,6 +65,25 @@ def check(frame, preds):
     errors = pl.DataFrame([{"model": name, **{f"{col}_error": ((d[name] - d["actual"]).abs() * d["balance"]).sum() / d["balance"].sum()
                                                 for col, d in tables.items()}} for name in preds])
     return errors, tables
+
+
+def permutation_importance(predict, X, y, seed=0):
+    """How much worse log loss gets when each feature's column is shuffled (breaking its link to the payoffs).
+
+    `predict` maps a pandas frame like X to payoff probabilities. A bigger increase means the model relies on that
+    feature more; about 0 means it does not use it. Pass a sample of rows: every feature costs one prediction pass.
+    """
+    from sklearn.metrics import log_loss
+    base = log_loss(y, predict(X), labels=[0, 1])
+    rows = []
+    for f in X.columns:
+        shuffled = X.copy()
+        shuffled[f] = X[f].sample(frac=1, random_state=seed).to_numpy()
+        shuffled[f] = shuffled[f].astype(X[f].dtype)  # keep categories categorical
+        rows.append({"feature": f, "log_loss_increase": log_loss(y, predict(shuffled), labels=[0, 1]) - base})
+    out = pl.DataFrame(rows)
+    return (out.with_columns(pct=100 * pl.col("log_loss_increase").clip(0, None) / pl.col("log_loss_increase").clip(0, None).sum())
+               .sort("log_loss_increase", descending=True))
 
 
 def shap_summary(model, X, title="SHAP summary", n=200_000, top=12, seed=0):

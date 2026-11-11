@@ -17,7 +17,9 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   │   ├── raw/                  # Single-Family Loan-Level Dataset, full_set_standard_historical_data.zip, 1999-2026
 │   │   └── processed/            # Cached samples 
 │   ├── fred/
-│   │   └── MORTGAGE30US.csv      # Freddie Mac PMMS 30-year mortgage rate, weekly (downloaded by notebook 05)
+│   │   ├── MORTGAGE30US.csv      # Freddie Mac PMMS 30-year mortgage rate, weekly
+│   │   ├── CSUSHPINSA.csv        # Case-Shiller U.S. home price index, monthly
+│   │   └── HSN1F.csv             # New one-family houses sold, thousands per year, monthly
 │   └── combined/
 │       └── model_table.parquet   # Fannie + Freddie loan-month table for the models (built by notebook 03)
 ├── notebooks/
@@ -25,7 +27,8 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   ├── 02_fannie_vs_freddie.ipynb # Do Fannie and Freddie loans prepay the same way?
 │   ├── 03_model_table.ipynb      # Builds data/combined/model_table.parquet (features, target, time split)
 │   ├── 04_lightgbm.ipynb         # LightGBM v1: payoff probability -> predicted vs. actual CPR (model saved to data/models/)
-│   └── 05_market_rate_incentive.ipynb # Market rate (PMMS), lag and incentive definition comparison
+│   ├── 05_market_rate_incentive.ipynb # Market rate (PMMS), lag and incentive definition comparison
+│   └── 06_turnover_refi.ipynb    # Split SMM into turnover and refinance; two-part model
 ├── references/
 │   ├── fannie_crt-file-layout-and-glossary.pdf    # Fannie Mae file layout (113 fields)
 │   └── freddie_general_user_guide_july_2026.pdf   # Freddie Mac user guide (31 origination + 35 performance fields)
@@ -44,7 +47,7 @@ The `data/` folder is not in git. Download the files yourself and put them at th
 
 - **Fannie Mae:** `Performance_All.zip` comes from the [Single-Family Loan Performance Data](https://capitalmarkets.fanniemae.com/credit-risk-transfer/single-family-credit-risk-transfer/fannie-mae-single-family-loan-performance-data)
 - **Freddie Mac:** `full_set_standard_historical_data.zip` (the full Standard Dataset) comes from the [Single-Family Loan-Level Dataset](https://www.freddiemac.com/research/datasets/sf-loanlevel-dataset)
-- **FRED:** `MORTGAGE30US.csv` (Freddie Mac PMMS 30-year rate) comes from [FRED](https://fred.stlouisfed.org/series/MORTGAGE30US). Notebook 05 downloads it if missing.
+- **FRED:** download the CSV from each series page into `data/fred/`: [MORTGAGE30US](https://fred.stlouisfed.org/series/MORTGAGE30US) (PMMS 30-year rate), [CSUSHPINSA](https://fred.stlouisfed.org/series/CSUSHPINSA) (Case-Shiller home prices), [HSN1F](https://fred.stlouisfed.org/series/HSN1F) (new home sales). For example: `curl -o data/fred/HSN1F.csv "https://fred.stlouisfed.org/graph/fredgraph.csv?id=HSN1F"`.
 
 ## Loan-level data
 
