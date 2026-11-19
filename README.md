@@ -20,6 +20,7 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   │   ├── MORTGAGE30US.csv      # Freddie Mac PMMS 30-year mortgage rate, weekly
 │   │   ├── CSUSHPINSA.csv        # Case-Shiller U.S. home price index, monthly
 │   │   └── HSN1F.csv             # New one-family houses sold, thousands per year, monthly
+│   ├── nyt/                      # NYT mortgage articles + monthly article counts, one JSON per month (source/nyt_media.py)
 │   └── combined/
 │       └── model_table.parquet   # Fannie + Freddie loan-month table for the models (built by notebook 03)
 ├── notebooks/
@@ -28,7 +29,8 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   ├── 03_model_table.ipynb      # Builds data/combined/model_table.parquet (features, target, time split)
 │   ├── 04_lightgbm.ipynb         # LightGBM v1: payoff probability -> predicted vs. actual CPR (model saved to data/models/)
 │   ├── 05_market_rate_incentive.ipynb # Market rate (PMMS), lag and incentive definition comparison
-│   └── 06_turnover_refi.ipynb    # Split SMM into turnover and refinance; two-part model
+│   ├── 06_turnover_refi.ipynb    # Split SMM into turnover and refinance; two-part model
+│   └── 07_media_effect.ipynb     # Media effect for the 2001–03 refi wave: PMMS new lows vs. NYT coverage
 ├── references/
 │   ├── fannie_crt-file-layout-and-glossary.pdf    # Fannie Mae file layout (113 fields)
 │   └── freddie_general_user_guide_july_2026.pdf   # Freddie Mac user guide (31 origination + 35 performance fields)
@@ -36,6 +38,9 @@ Deep learning models for mortgage-backed securities (MBS) prepayment
 │   ├── data_overview.md          # Inventory of what is in data/
 │   └── glossary.md               # Definitions of fields and terms used in the notebooks
 ├── source/
+│   ├── diagnostics.py            # Model checks: CPR by incentive/age, SHAP, permutation importance
+│   ├── turnover_refi.py          # Notebook 06 Turnover + Refi pipeline (data, turnover model, refinance loss)
+│   ├── nyt_media.py              # Downloads NYT mortgage articles (Archive API) into data/nyt/
 │   ├── fannie_load_data.py       # Sampler for data/fannie/Performance_All.zip
 │   └── freddie_load_data.py      # Sampler for data/freddie/raw/full_set_standard_historical_data.zip
 ├── .env                          # Local configuration (seed, API keys)
@@ -48,6 +53,7 @@ The `data/` folder is not in git. Download the files yourself and put them at th
 - **Fannie Mae:** `Performance_All.zip` comes from the [Single-Family Loan Performance Data](https://capitalmarkets.fanniemae.com/credit-risk-transfer/single-family-credit-risk-transfer/fannie-mae-single-family-loan-performance-data)
 - **Freddie Mac:** `full_set_standard_historical_data.zip` (the full Standard Dataset) comes from the [Single-Family Loan-Level Dataset](https://www.freddiemac.com/research/datasets/sf-loanlevel-dataset)
 - **FRED:** download the CSV from each series page into `data/fred/`: [MORTGAGE30US](https://fred.stlouisfed.org/series/MORTGAGE30US) (PMMS 30-year rate), [CSUSHPINSA](https://fred.stlouisfed.org/series/CSUSHPINSA) (Case-Shiller home prices), [HSN1F](https://fred.stlouisfed.org/series/HSN1F) (new home sales). For example: `curl -o data/fred/HSN1F.csv "https://fred.stlouisfed.org/graph/fredgraph.csv?id=HSN1F"`.
+- **NYT:** set `NYT_API_KEY` in `.env` (free key from [developer.nytimes.com](https://developer.nytimes.com), Archive API enabled), then run `nyt_media.download()` (about 70 minutes, resumable).
 
 ## Loan-level data
 
@@ -98,8 +104,8 @@ Requires [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
    RANDOM_SEED=
 
    FANNIE_MAE_API_KEY= Don't know if we are using it yet
-   ```
-
+   NYT_API_KEY=          # used in notebook 07 
+   
 5. **(VS Code) Select the interpreter**
 
    `Cmd+Shift+P` → **Python: Select Interpreter** → `mbs-prepay`.
